@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ArangoDB</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <style type="text/css">
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: 400;
+      }
+      .remark-slide-content h1 { font-size: 3em; }
+      .remark-slide-content h2 { font-size: 2em; }
+      .remark-slide-content h3 { font-size: 1.6em; }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+      .pull-left {
+        float: left;
+        width: 47%;
+      }
+      .pull-right {
+        float: right;
+        width: 47%;
+      }
+      .left-column {
+        color: #777;
+        width: 30%;
+        height: 92%;
+        float: left;
+      }
+      .left-column h3:last-of-type, .left-column h4:last-child {
+	color: #000;
+      }
+      .right-column {
+        width: 65%;
+        float: right;
+        padding-top: 1em;
+      }
+      .content-image img {
+	width: 100%;
+	height: 100%;
+      }
+      .content-table td {
+      }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+![Alt text](https://www.arangodb.com/wp-content/themes/triagens/images/logos/arangodb_logo2.png)
+
+
+---
+
+# Agenda
+
+1. Introduction
+2. ArangoDB Basics
+3. Advanced Features
+4. ArangoDB vs MongoDB
+5. Conclusion
+6. Q & A
+
+---
+
+# Introduction
+
+## Key features:
+
+* multi-model nosql database
+  * documents
+  * graphs
+  * key-values
+* transactions
+* SQL-like query (AQL)
+
+```javascript
+// ArangoDB.explain()
+{
+  "type": "NoSQL database",
+  "openSource": true,
+  "version": 2.4.3,
+  "builtWith": ["C", "C++", "js"],
+  "javascript": ["client side", "server side"],
+  "uses": "v8"
+}
+```
+
+---
+
+# ArangoDB Basics
+
+.left-column[
+  ### Documents and collections
+]
+.right-column[
+* ArangoDB is a database that works with documents
+
+* Documents are sets of name/value pairs (think of JSON objects), e.g.
+
+```json
+{ 
+  "name": "Jan", 
+  "age": 37 
+}
+```
+
+* Documents are organised in collections (like tables in relational databases)
+]
+
+---
+
+# ArangoDB Basics
+
+.left-column[
+  ### Documents and collections
+  ### Data types: JSON
+]
+.right-column[
+* ArangoDB operates on JSON documents
+
+* JSON data can be saved as-is:
+
+```javascript
+db.users.save({
+  "name": "Jan",
+  "age": 37
+});
+```
+
+]
+
+---
+
+# ArangoDB Basics
+
+.left-column[
+  ### Documents and collections
+  ### Data types: JSON
+  ### Schema-free
+]
+.right-column[
+
+* Documents can be heterogenous - even in the same collection
+
+e.g.
+
+```json
+{ "name": "Jan", "age": 37 }
+
+{ "name": "Tim", "city": "Paris" }
+
+{ "name": {
+    "firstname": "Patrick",
+    "lastname": "Star"
+  },
+  "active": true
+}
+```
+
+]
+
+---
+
+# ArangoDB Basics
+
+.left-column[
+  ### Documents and collections
+  ### Data types: JSON
+  ### Schema-free
+  ### Simple queries
+]
+.right-column[
+
+* Query a document by its unique id/key:
+
+```javascript
+db._document('users/jan');
+```
+
+* Query by providing an example:
+
+```javascript
+db.users.byExample({ name: 'Jan' });
+```
+
+]
+
+---
+
+# ArangoDB Basics
+
+.left-column[
+  ### Documents and collections
+  ### Data types: JSON
+  ### Schema-free
+  ### Simple queries
+  ### Indexes
+]
+.right-column[
+
+* ArangoDB allows querying on any document attributes or nested attributes
+
+* For each collection there will always be a primary index which is a hash index for the document keys (`_key` attribute) 
+of all documents in the collection
+
+* Secondary indexes can be created for higher query performances:
+
+  * Hash indexes (equality queries)
+  * Skiplists (range queries)
+  * 2d geo indexes (location queries)
+
+]
+
+---
+
+# Advanced Features
+
+.left-column[
+  ### References
+]
+.right-column[
+
+* ArangoDB can store references between documents
+
+* References are documents with two endpoints (document type: Edge)
+
+* Reference documents can carry own attributes
+
+]
+
+---
+
+# Advanced Features
+
+.left-column[
+  ### References
+  ### References example
+]
+.right-column[
+
+```javascript
+// Users documents (document)
+{
+  "name": "Jan",
+  "age": 37
+}
+
+{
+  "name": "Tim",
+  "city": "Paris"
+}
+
+// Relations documents (edge document)
+{
+  "_from": "users/jan",
+  "_to": "users/tim",
+  "type": "knows"
+}
+
+{
+  "_from": "users/tim",
+  "_to": "users/jan",
+  "type": "knows"
+}
+
+```
+
+]
+
+---
+
+# Advanced Features
+
+.left-column[
+  ### References
+  ### Graph
+]
+.right-column[
+
+A Graph consists of vertices and edges. Edges are stored as documents in edge collections. 
+In general a vertex is stored in a document collection.
+
+.content-image[
+
+![Alt text](http://bnode.org/media/2010/08/rww_ont.gif)
+
+]
+
+]
+
+---
+
+# Advanced Features
+
+.left-column[
+  ### References
+  ### Graph
+  ### Vertices & Edges 
+]
+.right-column[
+
+```javascript
+// Start vertex
+{
+  "_id": "posts/1",
+  "comment": [
+    "great post",
+    "something else"
+  ],
+  "organization": "n-fuse"
+}
+// End vertex
+{
+  "_id": "users/tim",
+  "name": "Tim"
+}
+// Edge
+{
+  "_id": "created_by/1",
+  "_from": "posts/1",
+  "_to": "users/tim"
+}
+
+```
+
+]
+
+---
+
+# Advanced Features
+
+.left-column[
+  ### References
+  ### Graph
+  ### Graph definition
+]
+.right-column[
+
+The graph module adds an additional layer on top of these collections giving you the following guarantees:
+
+* All modifications are executed transactional
+* If you delete a vertex all edges will be deleted, you will never have loose ends
+* If you insert an edge it is checked if the edge matches the definition, your edge collections will only contain valid edges
+
+#### Warning
+
+These guarantees are lost if you access the collections in any other way than the graph module!!!
+
+]
+
+---
+
+# Advanced Features
+
+.left-column[
+  ### References
+  ### Graph
+  ### Graph example
+]
+.right-column[
+
+```javascript
+var module = require("org/arangodb/general-graph");
+// Create an empty graph
+var graph = module._create("post");
+// Graph can have an arbitrary amount of vertex 
+// collections, which are not part of 
+// any edge definition of the graph
+graph._addVertexCollection("posts");
+graph._addVertexCollection("users");
+
+// Create a graph with edge definitions 
+// and orphan collections:
+var rel = module._relation("created_by", [
+  "posts"
+], [
+  "users"
+]);
+graph._extendEdgeDefinitions(rel);
+
+// Show graph definition
+graph;
+[ Graph post EdgeDefinitions: [ 
+  "created_by: [posts] -> [users]" 
+] VertexCollections: [ ] ]
+```
+
+]
+
+---
+
+# Advanced Features
+
+.left-column[
+  ### References
+  ### Graph
+  ### Graph query
+]
+.right-column[
+
+Graph functions: 
+* graph._edges(examples)
+* graph._vertices(examples)
+* graph_query.toVertices(examples)
+* graph_query.outEdges(examples)
+* etc.
+
+AQL query: 
+
+```SQL 
+// Get all posts of n-fuse organization
+// and their coresponding authors
+FOR v IN GRAPH_TRAVERSAL("post", {
+  organization: "n-fuse"
+}, "outbound")
+  RETURN v
+```
+
+]
+
+---
+
+# Advanced Features
+
+.left-column[
+  ### References
+  ### Graph
+  ### Transactions
+]
+.right-column[
+
+Transactions in ArangoDB are atomic, consistent, isolated, and durable (ACID).
+
+* Atomicity: either complete in their entirety or have no effect at all.
+
+* Consistency: no constraints or other invariants will be violated during or after any transaction.
+
+* Isolation: hide the modifications of a transaction from other transactions until the transaction commits.
+
+* Durability: operations from transactions that have committed will be made persistent. 
+The amount of transaction durability is configurable in ArangoDB, as is the durability on collection level.
+
+]
+
+---
+
+# Advanced Features
+
+.left-column[
+  ### References
+  ### Graph
+  ### Transactions
+  ### Transactions example
+]
+.right-column[
+
+```javascript
+// setup 
+db._create('c1');
+db._create('c2');
+
+db._executeTransaction({
+  collections: {
+    write: [ 'c1', 'c1' ]
+    // i.e. the write mode includes the read mode
+    // read: [ 'c1' ]
+  },
+  action: function () {
+    var db = require('internal').db;
+    for (var i = 0; i < 100; ++i) {
+      db.c1.save({ _key: 'key' + i });
+      db.c2.save({ _key: 'key' + i });
+    }
+    db.c1.count(); // 100 
+    // abort 
+    throw 'something wrong!'
+  }
+});
+
+```
+
+]
+
+---
+
+# Advanced Features
+
+.left-column[
+  ### References
+  ### Graph
+  ### Transactions
+  ### ArangoDB query language (AQL)
+]
+.right-column[
+
+* ArangoDB can also answer complex SQL-like queries
+
+* Such queries are expressed in ArangoDB's textual query language
+
+* This language allows joins, sub-queries, aggregation etc.
+
+]
+
+---
+
+# Advanced Features
+
+.left-column[
+  ### References
+  ### Graph
+  ### Transactions
+  ### ArangoDB query language (AQL)
+  ### AQL example
+]
+.right-column[
+
+```sql 
+For u IN users
+  FILTER u.city == "Paris" && 
+	 u.age >= 18
+  LET followers = (
+    FOR f IN users
+      FILTER f.follow == u._id
+      RETURN f
+  )
+  RETURN {
+    "users": u,
+    "popularity": LENGTH(followers)
+  }
+```
+
+]
+
+---
+
+# MongoDB vs ArangoDB
+
+.left-column[
+  ### Comparison
+]
+.right-column[
+
+.content-table[
+
+<table style="width:100%">
+<thead>
+  <tr>
+    <th></th>
+    <th>ArangoDB</th>
+    <th>MongoDB</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>Data model</td>
+    <td align="center">
+      <pre>Document-oriented<br/>Graph-oriented<br/>key-value</pre>
+    </td>
+    <td align="center">
+      <pre>Document-oriented</pre>
+    </td>
+  </tr>
+  <tr>
+    <td>Query language</td>
+    <td align="center">
+      <pre>Javascript<br/>API calls<br/>AQL<br/>RESTful</pre>
+    </td>
+    <td align="center">
+      <pre>Javascript<br/>API calls</pre>
+    </td>
+  </tr>
+  <tr>
+    <td>Data types</td>
+    <td align="center">
+      <pre>JSON</pre>
+    </td>
+    <td align="center">
+      <pre>JSON<br/>BLOB</pre>
+    </td>
+  </tr>
+  <tr>
+    <td>Map reduce</td>
+    <td align="center">No</td>
+    <td align="center">Yes</td>
+  </tr>
+</tbody>
+</table>
+
+]
+
+]
+
+---
+
+# MongoDB vs ArangoDB
+
+.left-column[
+  ### Comparison
+]
+.right-column[
+
+.content-table[
+
+<table style="width:100%">
+<thead>
+  <tr>
+    <th></th>
+    <th>ArangoDB</th>
+    <th>MongoDB</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>Transactions</td>
+    <td align="center">Yes</td>
+    <td align="center">No</td>
+  </tr>
+  <tr>
+    <td>Revision control</td>
+    <td align="center">Yes</td>
+    <td align="center">No</td>
+  </tr>
+  <tr>
+    <td>Graph support</td>
+    <td align="center">Yes</td>
+    <td align="center">No</td>
+  </tr>
+  <tr>
+    <td>Native driver</td>
+    <td align="center">REST API</td>
+    <td align="center">BSON</td>
+  </tr>
+</tbody>
+</table>
+
+]
+
+]
+
+---
+
+# MongoDB vs ArangoDB
+
+.left-column[
+  ### Comparison
+  ### The most important difference
+]
+.right-column[
+
+Why we need a more expressive query language ?
+
+.content-image[
+
+![Alt text](http://www.sarahmei.com/blog/wp-content/uploads/2013/11/Screen-Shot-2013-11-09-at-8.29.40-PM.png)
+
+]
+
+]
+
+---
+
+# Conclusion
+
+1. Introduction of document reference 
+2. Complex query with AQL
+3. Graph module for future use
+
+---
+class: center, middle
+
+# Thank you, any questions?
+
+![Alt text](http://mannerofspeaking.files.wordpress.com/2010/08/question.jpg)
+
+    </textarea>
+    <script src="https://gnab.github.io/remark/downloads/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
